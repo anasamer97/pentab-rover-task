@@ -21,8 +21,7 @@ R -> Rotate right by 90 degrees
 const roverState = {
   x: 0,
   y: 0,
-  direction: 'WEST',
-  stopped: false
+  direction: 'NORTH'
 };
 
 const obstacles = [
@@ -40,25 +39,20 @@ const moveForward = {
   WEST: { x: -1, y: 0 }
 };
 
-function executeCommand(roverState, command) {
-  if (command === 'F') {
-    roverState.x += moveForward[roverState.direction].x;
-    roverState.y = moveForward[roverState.direction].y + roverState.y;
-  } else if (command === 'B') {
-    roverState.x -= moveForward[roverState.direction].x;
-    roverState.y -= moveForward[roverState.direction].y;
-  } else if (command === 'L') {
-    // Determine the direction of the rover
-    const currentIndex = directions.indexOf(roverState.direction);
-    // Math to calculate proper direction
-    const newIndex = (currentIndex - 1 + directions.length) % directions.length;
-    roverState.direction = directions[newIndex];
-  } else if (command === 'R') {
-    const currentIndex = directions.indexOf(roverState.direction);
-    const newIndex = (currentIndex + 1) % directions.length;
-    roverState.direction = directions[newIndex];
+function executeCommand(rover, command) {
+  const dirDelta = moveForward[rover.direction];
+  if (command === 'F' || command === 'B') {
+    const multiplier = command === 'F' ? 1 : -1;
+    rover.x += dirDelta.x * multiplier;
+    rover.y += dirDelta.y * multiplier;
+  } else if (command === 'L' || command === 'R') {
+    const currentIndex = directions.indexOf(rover.direction);
+    const turn = command === 'L' ? -1 : 1;
+    const newIndex = (currentIndex + turn + directions.length) % directions.length;
+    rover.direction = directions[newIndex];
   }
 }
+
 
 function commandToRover(commandString) {
   for (let command of commandString) {
@@ -68,6 +62,4 @@ function commandToRover(commandString) {
 }
 
 
-
-console.log(commandToRover("FLFLB"));
-// X = -1, Y = 0, West
+console.log(commandToRover("FFF"));
