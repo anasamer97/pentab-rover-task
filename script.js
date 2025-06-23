@@ -1,27 +1,17 @@
-
-/*
-// Develop an API that translates the commands sent from earth to instructions that are understood by the rover.
-// When the rover touches down on Mars, it is initialised with it’s current coordinates and the direction it is facing.
-// (x, y, direction) e.g. (4, 2, EAST).
-
-The rover is given a command string which contains multiple commands, This string must then be 
-broken into each individual command and that command then executed.
- The valid commands are: 
-F -> Move forward on current heading  
-B -> Move backwards on current heading 
-L -> Rotate left by 90 degrees 
-R -> Rotate right by 90 degrees 
-
- An example command might be FLFFFRFLB 
- Once the full command string has been followed, the rover reports it’s current coordinates 
- and heading in the format (6, 4) NORTH
-*/
-
-
 const roverState = {
   x: 0,
   y: 0,
-  direction: 'NORTH'
+  direction: 'EAST',
+  stopped: false
+};
+
+const directions = ['NORTH', 'EAST', 'SOUTH', 'WEST'];
+
+const moveForward = {
+  NORTH: { x: 0, y: 1 },
+  EAST:  { x: 1, y: 0 },
+  SOUTH: { x: 0, y: -1 },
+  WEST:  { x: -1, y: 0 }
 };
 
 const obstacles = [
@@ -30,21 +20,31 @@ const obstacles = [
   [7, 4]
 ];
 
-const directions = ['NORTH', 'EAST', 'SOUTH', 'WEST'];
-
-const moveForward = {
-  NORTH: { x: 0, y: 1 },
-  EAST: { x: 1, y: 0 },
-  SOUTH: { x: 0, y: -1 },
-  WEST: { x: -1, y: 0 }
-};
+// Step 2.2 - Check if a position is an obstacle
+function isObstacle(x, y) {
+  return obstacles.some(ob => ob[0] === x && ob[1] === y);
+}
 
 function executeCommand(rover, command) {
-  const dirDelta = moveForward[rover.direction];
+  if (rover.stopped) return;
+
   if (command === 'F' || command === 'B') {
+    const delta = moveForward[rover.direction];
     const multiplier = command === 'F' ? 1 : -1;
-    rover.x += dirDelta.x * multiplier;
-    rover.y += dirDelta.y * multiplier;
+
+    // Step 2.1 - Compute next position
+    const nextX = rover.x + delta.x * multiplier;
+    const nextY = rover.y + delta.y * multiplier;
+
+    // Step 2.2 - Check for obstacle
+    if (isObstacle(nextX, nextY)) {
+      rover.stopped = true;
+      return;
+    }
+
+    rover.x = nextX;
+    rover.y = nextY;
+
   } else if (command === 'L' || command === 'R') {
     const currentIndex = directions.indexOf(rover.direction);
     const turn = command === 'L' ? -1 : 1;
@@ -53,13 +53,17 @@ function executeCommand(rover, command) {
   }
 }
 
-
 function commandToRover(commandString) {
+  roverState.stopped = false; // reset in case of reuse
+
   for (let command of commandString) {
     executeCommand(roverState, command);
+    if (roverState.stopped) break;
   }
-  return `(${roverState.x}, ${roverState.y}) ${roverState.direction}`;
+
+  const position = `(${roverState.x}, ${roverState.y}) ${roverState.direction}`;
+  return roverState.stopped ? `${position} STOPPED` : position;
 }
 
 
-console.log(commandToRover("FFF"));
+console.log(commandToRover('FFRRRRFFFFLLF'))
