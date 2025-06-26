@@ -1,63 +1,76 @@
-let RoverCurrentPosition = {
-    X: 0,
-    Y: 0,
-    Direction: "North"
+let rover = {
+    x:0,
+    y:0,
+    direction: 'north',
+    stopped: false
 }
 
-const Directions = ['North', 'East', "South", "West"];
+        // NORTH
 
-const MappingDirections = {
-    North: { X: 0, Y: 1},
-    East: { X: 1, Y: 0},
-    South: { X: 0, Y: -1},
-    West: { X: -1, Y: 0},
+//West            // EAST
+        // SOUTH
+let directions = {
+    north: {x: 0, y:1},
+    east: {x:1, y:0},
+    south: {x: 0, y:-1},
+    west: {x:-1, y:0}
 }
 
-const Obstacles = [[1,4], [3,5], [7,4]]
+const obstacles = [
+  [1, 4],
+  [3, 5],
+  [7, 4]
+];
+
 
 function isObstacle(x, y) {
-    return Obstacles.some(ob => ob[0] === x && ob[1] === y);
+  return obstacles.some(ob => ob[0] === x && ob[1] === y);
 }
 
-function GetCommandToRover(Command) {
-    for (let letter of Command) {
-        if (letter === 'F' || letter === 'B') {
-        let moveX = MappingDirections[RoverCurrentPosition.Direction].X;
-        let moveY = MappingDirections[RoverCurrentPosition.Direction].Y;
+let coordinates = ['north', 'east', 'south', 'west']
 
-        if (letter === 'B') {
-            moveX *= -1;
-            moveY *= -1;
+function getCommand(commandString) {
+    for(let i = 0; i < commandString.length; i++) {
+        if(commandString[i] === 'F' || commandString[i] === 'B') {
+            const direction = directions[rover.direction];
+            const multipler = commandString[i] === 'F' ? 1 : -1;
+            const nextX = rover.x + direction.x * multipler;
+            const nextY = rover.y + direction.y * multipler;
+
+            if(isObstacle(nextX, nextY)) {
+                console.log("isObstacle trigger");
+                rover.stopped = true;
+                return `Current Position (${rover.x}, ${rover.y}) ${rover.direction.toUpperCase()} STOPPED. Encounterd an obstacle at (${nextX}, ${nextY}). `
+            }
+           
+            rover.x = nextX;
+            rover.y = nextY;
         }
-        const nextX = RoverCurrentPosition.X + moveX;
-        const nextY = RoverCurrentPosition.Y + moveY;
-       
-        if (isObstacle(nextX, nextY)) {
+
+        else if(commandString[i] === 'B') {
+            rover.x -= directions[rover.direction].x
+            rover.y -= directions[rover.direction].y
+        }
+
+        else if(commandString[i] === 'R') {
+            let currentIndex = coordinates.indexOf(rover.direction)
+            let nextIndex =  (currentIndex + 1) % coordinates.length;
+            rover.direction = coordinates[nextIndex]
             
-            console.log(`Obstacle encountered at (${nextX}, ${nextY}). Aborting movement.`);
-            break; 
         }
 
-        RoverCurrentPosition.X = nextX;
-        RoverCurrentPosition.Y = nextY;
-}
-
-        else if (letter === 'R') {
-            let currentIndex = Directions.indexOf(RoverCurrentPosition.Direction);
-            let nextIndex = (currentIndex + 1) % Directions.length;
-            RoverCurrentPosition.Direction = Directions[nextIndex];
-        }
-
-        else if (letter === 'L') {
-            let currentIndex = Directions.indexOf(RoverCurrentPosition.Direction);
-            let nextIndex = (currentIndex - 1 + Directions.length) % Directions.length;
-            RoverCurrentPosition.Direction = Directions[nextIndex];
+        else if (commandString[i] === 'L') {
+            let currentIndex = coordinates.indexOf(rover.direction)
+            let nextIndex =  (currentIndex - 1) % coordinates.length;
+            if (nextIndex === -1) 
+                nextIndex = 3
+            rover.direction = coordinates[nextIndex] 
         }
     }
 
-    return `X: ${RoverCurrentPosition.X}, Y: ${RoverCurrentPosition.Y}, Direction: ${RoverCurrentPosition.Direction}`;
+    return `x: ${rover.x}, y: ${rover.y}, ${rover.direction}`
 }
 
 
+console.log(getCommand('FFFFFRFFF'));
 
-console.log(GetCommandToRover('FFBFFFFBRF'));
